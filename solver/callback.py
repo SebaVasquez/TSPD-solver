@@ -94,7 +94,7 @@ class Callback:
                                     m.cbLazy(quicksum(x[a] for a in delta_out_S(component)) >= gamma[node])
                                     solution.disconnected_components += 1
                             return
-                        else:
+                        elif master_problem.SEC == 'OCF' or not master_problem.SEC:
                             t_0 = time()
                             disconnected_component = get_disconnected_component_mincut(graph, N, recourse)
                             if disconnected_component:

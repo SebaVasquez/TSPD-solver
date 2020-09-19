@@ -16,17 +16,17 @@ def get_route(arcs, depot):
 
     return tuple(route)
 
-def get_disconnected_components(graph, depot, recourses):
+def get_disconnected_components(graph, depot, recourse):
     '''
         This function computes the strongly disconnected components of a given solution
 
-        Args: DiGraph, depot, recourses
+        Args: DiGraph, depot, recourse
 
         Return: list of component(s)
     '''
 
     # The capacity of the arc is determined by the value of x
-    x = recourses['x']
+    x = recourse['x']
 
     graph.remove_edges_from(list(graph.edges))
     arcs = list()
@@ -44,10 +44,17 @@ def get_disconnected_components(graph, depot, recourses):
 
     return selected_components
 
-def get_disconnected_component_mincut(graph, nodes, recourses):
+def get_disconnected_component_mincut(graph, nodes, recourse):
+    '''
+        This function computes disconnected components of a given solution, solving a MinCut problem
 
-    capacity = recourses['x']
-    gamma = recourses['gamma']
+        Args: DiGraph, list of nodes, recourse
+
+        Return: list of component(s)
+    '''
+
+    capacity = recourse['x']
+    gamma = recourse['gamma']
     depot = nodes[0]
 
     # Para todo j != depot, se hace min-cut. Sobre todos, se elige el subtour mas violado, junto al peso respectivo (gamma)

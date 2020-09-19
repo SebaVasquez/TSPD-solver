@@ -13,7 +13,7 @@ def solve(instance):
         'SEC': None,
         'activate_DB': False,
         'min_visited_nodes': instance.n // 2,
-        'time_limit': 60000000
+        'time_limit': 3600
     }
     subproblem_params = {
         'M': sum(sorted(instance.truck_travel_time.values())[::-1][:2 * (instance.n - 1):2])
