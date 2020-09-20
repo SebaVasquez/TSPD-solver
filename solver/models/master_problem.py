@@ -87,7 +87,7 @@ class MasterProblem(Model):
 
         # Variables
         x = model.addVars(A, vtype=GRB.BINARY, name='x')
-        gamma = model.addVars(N, vtype=GRB.CONTINUOUS, ub=1, name='z')
+        gamma = model.addVars(N, vtype=GRB.CONTINUOUS, ub=1, name='gamma')
         theta = model.addVar(vtype=GRB.CONTINUOUS, name='theta')
         f = _define_SEC()
 

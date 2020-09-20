@@ -16,6 +16,23 @@ def get_route(arcs, depot):
 
     return tuple(route)
 
+def get_route_recourse(x, arcs):
+    recourse = {a: 0 for a in arcs}
+    for a in x:
+        recourse[a] = 1
+    
+    return recourse
+
+def get_shortcuts(truck_route, max_drop):
+    shortcuts = list()
+    if max_drop > 0:
+        shortcuts = [
+            (truck_route[i], truck_route[j]) for i in range(len(truck_route) - 2) 
+            for j in range(i + 2, len(truck_route)) if j <= i + 1 + max_drop
+        ]
+    
+    return shortcuts
+
 def get_disconnected_components(graph, depot, recourse):
     '''
         This function computes the strongly disconnected components of a given solution

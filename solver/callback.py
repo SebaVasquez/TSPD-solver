@@ -11,15 +11,20 @@ class Callback:
     def __init__(self, instance, functions):
         self.instance = instance
         self.get_route = functions['get_route']
+        self.get_route_recourse = functions['get_route_recourse']
+        self.get_shortcuts = functions['get_shortcuts']
         self.graph = DiGraph()
-    
+
     def callback(self, master_problem, subproblem, solution):
         N = self.instance.nodes
+        customer_nodes = [node for node in N if node not in [self.instance.depot_1, self.instance.depot_2]]
         A = self.instance.arcs
         depot = self.instance.depot_1
         delta_out = self.instance.delta_out
         delta_out_S = self.instance.delta_out_S
         get_route = self.get_route
+        get_route_recourse = self.get_route_recourse
+        get_shortcuts = self.get_shortcuts
         graph = self.graph
 
         x = master_problem.variables['x']
@@ -38,6 +43,28 @@ class Callback:
                     if arc[0] > 0.5:
                         x_arcs.append(a)
                 return x_arcs  
+
+            def feasibility_cut_function(recourse, solution):
+                '''
+                This function generates and add an feasibility cut
+
+                Args: Variables as recourse, solution (class)
+                '''
+                
+                x_arcs = recourse['x_arcs']
+                gamma_recourse = recourse['gamma']
+                truck_route = recourse['truck_route']
+                max_drop = sum([gamma_recourse[i] for i in customer_nodes]) - min_visited_nodes
+
+                # Shortcuts generation
+                shortcuts = get_shortcuts(truck_route, max_drop)
+
+                delta = quicksum((1 - x[a]) for a in x_arcs)\
+                        - quicksum(x[a] for a in shortcuts)\
+                        - quicksum((1 - gamma[i]) for i in N if gamma_recourse[i] == 1)
+
+                m.cbLazy(delta >= 1)
+                solution.feasibility_cuts += 1
             
             def optimality_cut_function(recourse, waiting, solution):
                 '''
@@ -50,26 +77,17 @@ class Callback:
                 gamma_recourse = recourse['gamma']
                 theta_recourse = recourse['theta']
                 truck_route = recourse['truck_route']
-                max_drop = sum([gamma_recourse[i] for i in N]) - min_visited_nodes
+                max_drop = sum([gamma_recourse[i] for i in customer_nodes]) - min_visited_nodes
                 
                 # Shortcuts generation
-                shortcuts = list()
-                if max_drop > 0:
-                    shortcuts = [
-                        (truck_route[i], truck_route[j]) for i in range(len(truck_route) - 2) 
-                        for j in range(i + 2, len(truck_route)) if j <= i + 1 + max_drop
-                    ]
+                shortcuts = get_shortcuts(truck_route, max_drop)
                     
                 # Optimality cut
                 if theta_recourse <= waiting - 1e-8:
-                    m.cbLazy(
-                        theta >= - waiting * (
-                            quicksum((1 - x[a]) for a in x_arcs) - 
-                            quicksum(x[a] for a in shortcuts) - 
-                            quicksum((1 - gamma[i]) for i in N if gamma_recourse[i] == 1)
-                        )
-                        + waiting
-                    )
+                    delta = quicksum((1 - x[a]) for a in x_arcs)\
+                            - quicksum(x[a] for a in shortcuts)\
+                            - quicksum((1 - gamma[i]) for i in N if gamma_recourse[i] == 1)
+                    m.cbLazy(theta >= - waiting * delta + waiting )
                     solution.IOC += 1
                             
             # Callback execution
@@ -112,8 +130,7 @@ class Callback:
                 # Variables retrieval
                 x_recourse = {a: 0 for a in A}
                 x_arcs = get_truck_route(m)
-                for a in x_arcs:
-                    x_recourse[a] = 1
+                x_recourse = get_route_recourse(x_arcs, A)
                 gamma_recourse = {
                     i: sum([x_recourse[a] for a in delta_out[i]]) 
                     for i in N
@@ -137,23 +154,26 @@ class Callback:
                                 m.cbLazy(quicksum(x[a] for a in delta_out_S(component)) >= gamma[node])
                                 solution.disconnected_components += 1
                         return
-
-                # Optimality cut check
+                
                 truck_route = get_route(x_arcs, depot)
+                recourse['truck_route'] = truck_route
+                # Optimality cut check
                 if truck_route in solution.Q:  # Truck route is already tracked
                     waiting = solution.Q[truck_route]
                 else:
                     set_constr_rhs(x_recourse)
                     subproblem._solve()
                     solution.IOC_time_list.append(subproblem.runtime)
+                    
+                    # Feasibility cut
                     if subproblem.status != 2:
-                        print(x_arcs)
-                        sys.exit('\nSubproblem is infeasible. Dropping out!\n')
+                        feasibility_cut_function(recourse, solution)
+                        return
+                    
                     waiting = subproblem.objval
                     solution.Q[truck_route] = waiting  # Track current truck route
                         
                 if waiting > 1e-8:
-                    recourse['truck_route'] = truck_route
                     optimality_cut_function(recourse, waiting, solution)  # Add optimality cut
                 
                 # Incumbent achievement time

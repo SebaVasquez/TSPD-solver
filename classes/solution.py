@@ -15,6 +15,7 @@ class Solution:
         self.disconnected_components_mincut_time_list = list()
         self.IOC = 0
         self.IOC_time_list = list()
+        self.feasibility_cuts = 0
 
     @property
     def drone_arcs(self):

@@ -109,8 +109,8 @@ class SubProblem(Model):
         model.addConstrs(f[a] <= z[a] for a in A)
         model.addConstrs(quicksum(o[i, k, j] for k in N if (i, k, j) in O) <= y[i, j] for i in N for j in N if i != j)
 
-        model.addConstrs(quicksum(o[e] for e in delta_out_operation[i]) <= gamma[i] * (n - 2) for i in N)
-        model.addConstrs(quicksum(o[e] for e in delta_in_operation[i]) <= gamma[i] * (n - 2) for i in N)
+        model.addConstrs(quicksum(o[e] for e in delta_out_operation[i]) <= (n - 2) * gamma[i] for i in N)
+        model.addConstrs(quicksum(o[e] for e in delta_in_operation[i]) <= (n - 2) * gamma[i] for i in N)
 
         model.addConstrs(quicksum(o[i, k, j] for i in N for j in N if (i, k, j) in O) == 1 - gamma[k] for k in N)
         

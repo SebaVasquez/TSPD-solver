@@ -28,21 +28,5 @@ def run(n, alpha, seed=0):
     
     return nodes, truck_travel_time, drone_travel_time
 
-if __name__ == '__main__':
-    n = 10
-    pos, c, d = run(n, 2, 1)
-    nodes = [i + 1 for i in range(n)]
-    
-    arcs = [(i, i + 1) for i in range(1, n)]
-    labels = {i: str(i) for i in nodes}
-
-    G = nx.Graph()
-    nx.draw_networkx_nodes(G, pos, nodes, node_color='r', node_size=170, alpha=1)
-    nx.draw_networkx_nodes(G, pos, nodes, node_color='w', node_size=140, alpha=1)
-    nx.draw_networkx_labels(G, pos, labels, font_size=7)
-    nx.draw_networkx_edges(G, pos, arcs)
-    plt.axis('off')
-    plt.show()
-
     
 
