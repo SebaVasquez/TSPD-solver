@@ -46,7 +46,7 @@ class Callback:
 
             def feasibility_cut_function(recourse, solution):
                 '''
-                This function generates and add an feasibility cut
+                This function generates and adds an feasibility cut
 
                 Args: Variables as recourse, solution (class)
                 '''
@@ -68,7 +68,7 @@ class Callback:
             
             def optimality_cut_function(recourse, waiting, solution):
                 '''
-                This function generates and add an IOC
+                This function generates and adds an IOC
 
                 Args: Variables as recourse, Q(x_recourse), solution (class)
                 '''
